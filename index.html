@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="description" content="GramRozgar - ग्रामीण कामगारांना स्थानिक रोजगाराशी जोडणारे व्यासपीठ">
+<title>GramRozgar | ग्रामरोजगार</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1B4332;
+    --primary-light: #2D6A4F;
+    --primary-lighter: #40916C;
+    --accent: #D4A017;
+    --accent-light: #F4C842;
+    --bg: #F5F0E8;
+    --bg2: #EDE8DC;
+    --card: #FFFFFF;
+    --text: #1A1A1A;
+    --text-muted: #5C6370;
+    --danger: #DC2626;
+    --success: #16A34A;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 16px rgba(27,67,50,0.10);
+    --shadow-lg: 0 8px 32px rgba(27,67,50,0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'Baloo 2', 'Noto Sans Devanagari', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* LANDING */
+  #screen-landing { background: var(--primary); align-items: center; justify-content: center; padding: 32px 24px; position: relative; overflow: hidden; }
+  #screen-landing::before { content:''; position:absolute; top:-80px; right:-80px; width:260px; height:260px; background: var(--primary-lighter); border-radius:50%; opacity:0.25; }
+  #screen-landing::after { content:''; position:absolute; bottom:-60px; left:-60px; width:200px; height:200px; background: var(--accent); border-radius:50%; opacity:0.12; }
+  .landing-logo { font-size: 56px; margin-bottom: 8px; animation: bounce 2s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .landing-title { font-size: 42px; font-weight: 800; color: #fff; text-align: center; line-height: 1.1; }
+  .landing-title span { color: var(--accent-light); }
+  .landing-tagline { font-size: 18px; color: rgba(255,255,255,0.8); text-align: center; margin: 12px 0 40px; }
+  .lang-toggle { position: absolute; top: 20px; right: 20px; display: flex; gap: 6px; }
+  .lang-btn { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 6px 14px; border-radius: 20px; font-family: inherit; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+  .lang-btn.active { background: var(--accent); border-color: var(--accent); color: var(--primary); font-weight: 700; }
+  .landing-btns { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 16px; position: relative; z-index: 1; }
+  .btn-worker { background: var(--accent); color: var(--primary); border: none; border-radius: var(--radius); padding: 20px; font-family: inherit; font-size: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 20px rgba(212,160,23,0.4); transition: transform 0.15s, box-shadow 0.15s; }
+  .btn-worker:active { transform: scale(0.97); }
+  .btn-employer { background: rgba(255,255,255,0.12); color: #fff; border: 2px solid rgba(255,255,255,0.4); border-radius: var(--radius); padding: 20px; font-family: inherit; font-size: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.15s; }
+  .btn-employer:active { background: rgba(255,255,255,0.2); }
+
+  /* OTP SCREEN */
+  #screen-otp, #screen-register { background: var(--bg); }
+  .screen-header { background: var(--primary); padding: 24px 20px 28px; position: relative; }
+  .back-btn { background: none; border: none; color: rgba(255,255,255,0.8); font-size: 24px; cursor: pointer; padding: 4px; }
+  .screen-header h2 { color: #fff; font-size: 26px; font-weight: 700; margin-top: 8px; }
+  .screen-header p { color: rgba(255,255,255,0.75); font-size: 15px; margin-top: 4px; }
+  .form-body { padding: 28px 20px; flex: 1; }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 16px; font-weight: 600; color: var(--primary); margin-bottom: 8px; }
+  .form-group input, .form-group select { width: 100%; padding: 16px; border: 2px solid #D1C9B8; border-radius: var(--radius-sm); font-family: inherit; font-size: 18px; background: #fff; color: var(--text); outline: none; transition: border-color 0.2s; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--primary-lighter); }
+  .otp-inputs { display: flex; gap: 10px; }
+  .otp-inputs input { flex: 1; text-align: center; font-size: 28px; font-weight: 700; padding: 14px 8px; }
+  .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .skill-chip { background: var(--bg2); border: 2px solid transparent; border-radius: 40px; padding: 12px 16px; font-family: inherit; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; font-weight: 600; color: var(--text-muted); }
+  .skill-chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .btn-primary { width: 100%; background: var(--primary); color: #fff; border: none; border-radius: var(--radius); padding: 18px; font-family: inherit; font-size: 20px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: transform 0.15s; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-accent { width: 100%; background: var(--accent); color: var(--primary); border: none; border-radius: var(--radius); padding: 18px; font-family: inherit; font-size: 20px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+
+  /* WORKER DASHBOARD */
+  #screen-worker-dashboard { background: var(--bg); }
+  .worker-header { background: var(--primary); padding: 20px 20px 24px; }
+  .worker-greeting { color: rgba(255,255,255,0.75); font-size: 15px; }
+  .worker-name { color: #fff; font-size: 24px; font-weight: 700; margin-top: 2px; }
+  .worker-location { color: var(--accent-light); font-size: 14px; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
+  .jobs-count-banner { background: var(--accent); margin: 16px 20px 0; border-radius: var(--radius-sm); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+  .jobs-count-banner span { font-size: 15px; font-weight: 700; color: var(--primary); }
+  .job-feed { padding: 16px 20px 100px; flex: 1; overflow-y: auto; }
+  .section-title { font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 14px; }
+  .job-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; transition: transform 0.15s; }
+  .job-card:active { transform: scale(0.99); }
+  .job-card-header { background: var(--primary); padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .job-type-icon { font-size: 28px; }
+  .job-type-name { color: #fff; font-size: 18px; font-weight: 700; }
+  .job-distance { margin-left: auto; background: var(--accent); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 700; }
+  .job-card-body { padding: 14px 16px; }
+  .job-wage { font-size: 28px; font-weight: 800; color: var(--success); }
+  .job-wage span { font-size: 16px; color: var(--text-muted); font-weight: 400; }
+  .job-details { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .job-detail-row { display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--text-muted); }
+  .job-card-actions { padding: 0 16px 16px; display: flex; gap: 10px; }
+  .btn-apply { flex: 1; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); padding: 14px; font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  .btn-apply.applied { background: var(--success); }
+  .btn-listen { background: var(--bg2); color: var(--primary); border: none; border-radius: var(--radius-sm); padding: 14px 16px; font-family: inherit; font-size: 17px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid #E5DDD0; display: flex; padding: 8px 0; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; cursor: pointer; border: none; background: none; font-family: inherit; color: var(--text-muted); font-size: 12px; transition: color 0.2s; }
+  .nav-item.active { color: var(--primary); }
+  .nav-item .nav-icon { font-size: 24px; }
+  .nav-item.active .nav-icon { filter: none; }
+
+  /* VOICE FAB */
+  .voice-fab { position: fixed; bottom: 90px; right: 20px; width: 60px; height: 60px; background: var(--accent); border-radius: 50%; border: none; font-size: 28px; cursor: pointer; box-shadow: 0 4px 20px rgba(212,160,23,0.5); z-index: 99; display: flex; align-items: center; justify-content: center; transition: transform 0.15s; }
+  .voice-fab.speaking { animation: pulse 1s infinite; background: var(--danger); }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+
+  /* EMPLOYER DASHBOARD */
+  #screen-employer-dashboard { background: var(--bg); }
+  .emp-header { background: var(--primary); padding: 20px; }
+  .emp-header h2 { color: #fff; font-size: 22px; font-weight: 700; }
+  .emp-header p { color: rgba(255,255,255,0.7); font-size: 14px; margin-top: 4px; }
+  .emp-tabs { display: flex; background: var(--bg2); margin: 16px 20px; border-radius: var(--radius-sm); padding: 4px; }
+  .emp-tab { flex: 1; padding: 12px; border: none; background: none; font-family: inherit; font-size: 15px; font-weight: 600; color: var(--text-muted); cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+  .emp-tab.active { background: var(--primary); color: #fff; }
+  .emp-content { padding: 0 20px 100px; flex: 1; overflow-y: auto; }
+  .worker-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 14px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; }
+  .worker-avatar { width: 54px; height: 54px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 22px; font-weight: 700; flex-shrink: 0; }
+  .worker-info { flex: 1; }
+  .worker-card-name { font-size: 18px; font-weight: 700; color: var(--text); }
+  .worker-skills-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .skill-tag { background: var(--bg2); color: var(--primary); padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .worker-card-meta { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
+  .worker-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-call { flex: 1; background: var(--success); color: #fff; border: none; border-radius: var(--radius-sm); padding: 12px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-msg { flex: 1; background: #25D366; color: #fff; border: none; border-radius: var(--radius-sm); padding: 12px; font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .post-job-form { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .post-job-form h3 { font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+
+  /* MY APPLICATIONS */
+  .app-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 14px; padding: 16px; }
+  .app-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-top: 8px; }
+  .status-pending { background: #FEF3C7; color: #92400E; }
+  .status-accepted { background: #D1FAE5; color: #065F46; }
+  .status-rejected { background: #FEE2E2; color: #991B1B; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--primary); color: #fff; padding: 14px 24px; border-radius: 40px; font-size: 16px; font-weight: 600; z-index: 999; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: flex-end; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--card); border-radius: 24px 24px 0 0; padding: 28px 24px; width: 100%; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal h3 { font-size: 22px; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+  .modal-detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--bg2); font-size: 17px; }
+  .modal-detail-row:last-of-type { border: none; }
+  .modal-detail-label { color: var(--text-muted); }
+  .modal-detail-value { font-weight: 700; color: var(--text); }
+  .modal-btns { display: flex; gap: 12px; margin-top: 20px; }
+  .btn-cancel-modal { flex: 1; background: var(--bg2); color: var(--text); border: none; border-radius: var(--radius-sm); padding: 16px; font-family: inherit; font-size: 18px; font-weight: 600; cursor: pointer; }
+  .btn-confirm-modal { flex: 2; background: var(--primary); color: #fff; border: none; border-radius: var(--radius-sm); padding: 16px; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer; }
+
+  /* FILTER BAR */
+  .filter-bar { padding: 12px 20px; background: var(--card); display: flex; gap: 8px; overflow-x: auto; border-bottom: 1px solid var(--bg2); }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip { background: var(--bg2); border: none; border-radius: 20px; padding: 8px 16px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; color: var(--text-muted); transition: all 0.15s; }
+  .filter-chip.active { background: var(--primary); color: #fff; }
+
+  /* STARS */
+  .stars { color: var(--accent); font-size: 16px; }
+
+  /* PROFILE */
+  .profile-header { background: var(--primary); padding: 32px 20px; display: flex; flex-direction: column; align-items: center; }
+  .profile-avatar { width: 80px; height: 80px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 800; color: var(--primary); margin-bottom: 12px; }
+  .profile-name { color: #fff; font-size: 24px; font-weight: 700; }
+  .profile-phone { color: rgba(255,255,255,0.7); font-size: 16px; margin-top: 4px; }
+  .profile-body { padding: 20px; }
+  .profile-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .profile-card h4 { font-size: 16px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px; }
+  .profile-card p { font-size: 18px; font-weight: 600; color: var(--text); }
+  .btn-logout { width: 100%; background: #FEE2E2; color: var(--danger); border: none; border-radius: var(--radius-sm); padding: 16px; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+
+  /* LOADING */
+  .skeleton { background: linear-gradient(90deg, var(--bg2) 25%, #E8E2D4 50%, var(--bg2) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-sm); }
+  @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+  /* MISC */
+  .text-center { text-align: center; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .divider { height: 1px; background: var(--bg2); margin: 16px 0; }
+  .input-with-icon { position: relative; }
+  .input-with-icon input { padding-right: 50px; }
+  .input-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 20px; }
+  .resend-otp { text-align: center; margin-top: 16px; color: var(--text-muted); font-size: 15px; }
+  .resend-otp span { color: var(--primary); font-weight: 700; cursor: pointer; }
+  .optional-badge { font-size: 12px; background: var(--bg2); color: var(--text-muted); padding: 2px 8px; border-radius: 10px; font-weight: 400; margin-left: 8px; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- APPLY MODAL -->
+<div class="modal-overlay" id="applyModal">
+  <div class="modal">
+    <h3 id="modalJobTitle">शेती काम</h3>
+    <div class="modal-detail-row"><span class="modal-detail-label" data-mr="ठिकाण" data-hi="स्थान" data-en="Location">ठिकाण</span><span class="modal-detail-value" id="modalLocation">—</span></div>
+    <div class="modal-detail-row"><span class="modal-detail-label" data-mr="मजुरी" data-hi="मजदूरी" data-en="Wage">मजुरी</span><span class="modal-detail-value" id="modalWage">—</span></div>
+    <div class="modal-detail-row"><span class="modal-detail-label" data-mr="तारीख" data-hi="तारीख" data-en="Date">तारीख</span><span class="modal-detail-value" id="modalDate">—</span></div>
+    <div class="modal-detail-row"><span class="modal-detail-label" data-mr="नियोक्ता" data-hi="नियोक्ता" data-en="Employer">नियोक्ता</span><span class="modal-detail-value" id="modalEmployer">—</span></div>
+    <div class="modal-btns">
+      <button class="btn-cancel-modal" onclick="closeApplyModal()" data-mr="रद्द करा" data-hi="रद्द करें" data-en="Cancel">रद्द करा</button>
+      <button class="btn-confirm-modal" onclick="confirmApply()" data-mr="✅ अर्ज करा" data-hi="✅ अर्ज करें" data-en="✅ Apply Now">✅ अर्ज करा</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN 1: LANDING ===== -->
+<div class="screen active" id="screen-landing">
+  <div class="lang-toggle">
+    <button class="lang-btn active" onclick="setLang('mr')">मराठी</button>
+    <button class="lang-btn" onclick="setLang('hi')">हिंदी</button>
+    <button class="lang-btn" onclick="setLang('en')">EN</button>
+  </div>
+  <div class="landing-logo">🌾</div>
+  <div class="landing-title">Gram<span>Rozgar</span></div>
+  <div class="landing-tagline" data-mr="काम शोधा, वेळ वाचवा" data-hi="काम खोजें, समय बचाएं" data-en="Find Work, Save Time">काम शोधा, वेळ वाचवा</div>
+  <div class="landing-btns">
+    <button class="btn-worker" onclick="goToWorkerOTP()">
+      <span>👷</span>
+      <span data-mr="मी कामगार आहे" data-hi="मैं मजदूर हूं" data-en="I am a Worker">मी कामगार आहे</span>
+    </button>
+    <button class="btn-employer" onclick="goToEmployerOTP()">
+      <span>🏗️</span>
+      <span data-mr="मला कामगार हवे" data-hi="मुझे मजदूर चाहिए" data-en="I Need Workers">मला कामगार हवे</span>
+    </button>
+  </div>
+  <div style="color:rgba(255,255,255,0.4); font-size:13px; margin-top:32px; position:relative; z-index:1;">v1.0 — GramRozgar 2025</div>
+</div>
+
+<!-- ===== SCREEN 2: WORKER OTP ===== -->
+<div class="screen" id="screen-otp">
+  <div class="screen-header">
+    <button class="back-btn" onclick="showScreen('screen-landing')">←</button>
+    <h2 data-mr="📱 OTP ने लॉगिन करा" data-hi="📱 OTP से लॉगिन करें" data-en="📱 Login with OTP">📱 OTP ने लॉगिन करा</h2>
+    <p data-mr="तुमचा मोबाईल नंबर टाका" data-hi="अपना मोबाइल नंबर डालें" data-en="Enter your mobile number">तुमचा मोबाईल नंबर टाका</p>
+  </div>
+  <div class="form-body" id="otp-step-1">
+    <div class="form-group">
+      <label data-mr="📞 मोबाईल नंबर" data-hi="📞 मोबाइल नंबर" data-en="📞 Mobile Number">📞 मोबाईल नंबर</label>
+      <div class="input-with-icon">
+        <input type="tel" id="workerPhone" maxlength="10" placeholder="9876543210" inputmode="numeric">
+        <span class="input-icon">🇮🇳</span>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="sendOTP('worker')" data-mr="OTP पाठवा →" data-hi="OTP भेजें →" data-en="Send OTP →">OTP पाठवा →</button>
+    <div class="resend-otp mt-16" data-mr="2G नेटवर्कवर देखील काम करते ✓" data-hi="2G नेटवर्क पर भी काम करता है ✓" data-en="Works on 2G networks too ✓">2G नेटवर्कवर देखील काम करते ✓</div>
+  </div>
+  <div class="form-body" id="otp-step-2" style="display:none;">
+    <div class="form-group">
+      <label data-mr="🔐 6 अंकी OTP टाका" data-hi="🔐 6 अंकों का OTP डालें" data-en="🔐 Enter 6-digit OTP">🔐 6 अंकी OTP टाका</label>
+      <div class="otp-inputs">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-box" oninput="otpNext(this,0)">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-box" oninput="otpNext(this,1)">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-box" oninput="otpNext(this,2)">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-box" oninput="otpNext(this,3)">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-box" oninput="otpNext(this,4)">
+        <input type="text" maxlength="1" inputmode="numeric" class="otp-box" oninput="otpNext(this,5)">
+      </div>
+      <div class="resend-otp mt-8"><span data-mr="Demo: 123456 टाका" data-hi="Demo: 123456 डालें" data-en="Demo: Enter 123456">Demo: 123456 टाका</span></div>
+    </div>
+    <button class="btn-primary" onclick="verifyOTP('worker')" data-mr="✅ OTP तपासा" data-hi="✅ OTP जांचें" data-en="✅ Verify OTP">✅ OTP तपासा</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 3: WORKER REGISTER ===== -->
+<div class="screen" id="screen-register">
+  <div class="screen-header">
+    <h2 data-mr="📝 माहिती भरा" data-hi="📝 जानकारी भरें" data-en="📝 Fill Your Details">📝 माहिती भरा</h2>
+    <p data-mr="एकदाच भरा, नेहमी उपयोगी" data-hi="एक बार भरें, हमेशा काम आएगा" data-en="Fill once, always useful">एकदाच भरा, नेहमी उपयोगी</p>
+  </div>
+  <div class="form-body" style="padding-bottom: 32px;">
+    <div class="form-group">
+      <label data-mr="👤 पूर्ण नाव" data-hi="👤 पूरा नाम" data-en="👤 Full Name">👤 पूर्ण नाव</label>
+      <input type="text" id="workerName" placeholder="रामराव पाटील">
+    </div>
+    <div class="form-group">
+      <label data-mr="🎂 वय" data-hi="🎂 उम्र" data-en="🎂 Age">🎂 वय</label>
+      <input type="number" id="workerAge" placeholder="28" inputmode="numeric" min="18" max="70">
+    </div>
+    <div class="form-group">
+      <label data-mr="🆔 आधार क्रमांक (शेवटचे 4 अंक)" data-hi="🆔 आधार नंबर (अंतिम 4 अंक)" data-en="🆔 Aadhaar (last 4 digits)">🆔 आधार क्रमांक (शेवटचे 4 अंक)</label>
+      <input type="text" id="workerAadhaar" maxlength="4" placeholder="XXXX" inputmode="numeric">
+    </div>
+    <div class="form-group">
+      <label>
+        <span data-mr="🔨 कौशल्य निवडा" data-hi="🔨 कौशल्य चुनें" data-en="🔨 Select Skills">🔨 कौशल्य निवडा</span>
+        <span class="optional-badge" data-mr="पर्यायी" data-hi="वैकल्पिक" data-en="optional">पर्यायी</span>
+      </label>
+      <div class="skills-grid">
+        <button class="skill-chip" onclick="toggleSkill(this,'शेती')">🌾 शेती</button>
+        <button class="skill-chip" onclick="toggleSkill(this,'बांधकाम')">🧱 बांधकाम</button>
+        <button class="skill-chip" onclick="toggleSkill(this,'घरकाम')">🏠 घरकाम</button>
+        <button class="skill-chip" onclick="toggleSkill(this,'लोडिंग')">📦 लोडिंग</button>
+        <button class="skill-chip" onclick="toggleSkill(this,'ड्रायव्हिंग')">🚗 ड्रायव्हिंग</button>
+        <button class="skill-chip" onclick="toggleSkill(this,'इतर')">⚡ इतर</button>
+      </div>
+    </div>
+    <button class="btn-accent" onclick="registerWorker()" data-mr="✅ नोंदणी करा →" data-hi="✅ पंजीकरण करें →" data-en="✅ Register →">✅ नोंदणी करा →</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 4: WORKER DASHBOARD ===== -->
+<div class="screen" id="screen-worker-dashboard">
+  <div class="worker-header">
+    <div class="worker-greeting" data-mr="नमस्कार 🙏" data-hi="नमस्ते 🙏" data-en="Hello 🙏">नमस्कार 🙏</div>
+    <div class="worker-name" id="dashWorkerName">रामराव पाटील</div>
+    <div class="worker-location">📍 <span id="dashWorkerLocation">लोणार, बुलढाणा</span></div>
+  </div>
+  <div class="jobs-count-banner">
+    <span style="font-size:22px;">💼</span>
+    <span id="jobsCountText" data-mr="आज तुमच्या जवळ 6 कामे उपलब्ध आहेत!" data-hi="आज आपके पास 6 काम उपलब्ध हैं!" data-en="6 jobs available near you today!">आज तुमच्या जवळ 6 कामे उपलब्ध आहेत!</span>
+  </div>
+  <div class="filter-bar" id="workerFilterBar">
+    <button class="filter-chip active" onclick="filterJobs(this,'all')" data-mr="सर्व" data-hi="सभी" data-en="All">सर्व</button>
+    <button class="filter-chip" onclick="filterJobs(this,'शेती')" >🌾 शेती</button>
+    <button class="filter-chip" onclick="filterJobs(this,'बांधकाम')">🧱 बांधकाम</button>
+    <button class="filter-chip" onclick="filterJobs(this,'घरकाम')">🏠 घरकाम</button>
+    <button class="filter-chip" onclick="filterJobs(this,'लोडिंग')">📦 लोडिंग</button>
+  </div>
+  <div class="job-feed" id="jobFeed">
+    <!-- Jobs injected by JS -->
+  </div>
+  <button class="voice-fab" id="voiceFab" onclick="toggleVoice()" title="ऐका">🔊</button>
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="switchWorkerTab('home',this)"><span class="nav-icon">🏠</span><span data-mr="घर" data-hi="घर" data-en="Home">घर</span></button>
+    <button class="nav-item" onclick="switchWorkerTab('apps',this)"><span class="nav-icon">📋</span><span data-mr="माझे अर्ज" data-hi="मेरे आवेदन" data-en="My Apps">माझे अर्ज</span></button>
+    <button class="nav-item" onclick="switchWorkerTab('profile',this)"><span class="nav-icon">👤</span><span data-mr="प्रोफाइल" data-hi="प्रोफ़ाइल" data-en="Profile">प्रोफाइल</span></button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 5: MY APPLICATIONS ===== -->
+<div class="screen" id="screen-my-apps">
+  <div class="worker-header">
+    <button class="back-btn" onclick="switchWorkerTab('home', document.querySelector('.nav-item'))">←</button>
+    <h2 style="color:#fff; font-size:22px; margin-top:8px;" data-mr="📋 माझे अर्ज" data-hi="📋 मेरे आवेदन" data-en="📋 My Applications">📋 माझे अर्ज</h2>
+  </div>
+  <div style="padding: 16px 20px 100px;" id="myAppsList"></div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="switchWorkerTab('home',this)"><span class="nav-icon">🏠</span><span data-mr="घर" data-hi="घर" data-en="Home">घर</span></button>
+    <button class="nav-item active" onclick="switchWorkerTab('apps',this)"><span class="nav-icon">📋</span><span data-mr="माझे अर्ज" data-hi="मेरे आवेदन" data-en="My Apps">माझे अर्ज</span></button>
+    <button class="nav-item" onclick="switchWorkerTab('profile',this)"><span class="nav-icon">👤</span><span data-mr="प्रोफाइल" data-hi="प्रोफ़ाइल" data-en="Profile">प्रोफाइल</span></button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 6: WORKER PROFILE ===== -->
+<div class="screen" id="screen-worker-profile">
+  <div class="profile-header">
+    <div class="profile-avatar" id="profileAvatar">र</div>
+    <div class="profile-name" id="profileName">रामराव पाटील</div>
+    <div class="profile-phone" id="profilePhone">📞 9876543210</div>
+    <div class="stars mt-8">⭐⭐⭐⭐⭐ <span style="color:rgba(255,255,255,0.7); font-size:14px;">(4.8)</span></div>
+  </div>
+  <div class="profile-body" style="padding-bottom:100px;">
+    <div class="profile-card">
+      <h4 data-mr="कौशल्य" data-hi="कौशल्य" data-en="Skills">कौशल्य</h4>
+      <div class="worker-skills-tags" id="profileSkills"></div>
+    </div>
+    <div class="profile-card">
+      <h4 data-mr="वय" data-hi="उम्र" data-en="Age">वय</h4>
+      <p id="profileAge">—</p>
+    </div>
+    <div class="profile-card">
+      <h4 data-mr="आधार (शेवटचे 4 अंक)" data-hi="आधार (अंतिम 4 अंक)" data-en="Aadhaar (last 4)">आधार (शेवटचे 4 अंक)</h4>
+      <p id="profileAadhaar">XXXX</p>
+    </div>
+    <button class="btn-logout" onclick="logout()" data-mr="🚪 लॉगआउट" data-hi="🚪 लॉगआउट" data-en="🚪 Logout">🚪 लॉगआउट</button>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="switchWorkerTab('home',this)"><span class="nav-icon">🏠</span><span data-mr="घर" data-hi="घर" data-en="Home">घर</span></button>
+    <button class="nav-item" onclick="switchWorkerTab('apps',this)"><span class="nav-icon">📋</span><span data-mr="माझे अर्ज" data-hi="मेरे आवेदन" data-en="My Apps">माझे अर्ज</span></button>
+    <button class="nav-item active" onclick="switchWorkerTab('profile',this)"><span class="nav-icon">👤</span><span data-mr="प्रोफाइल" data-hi="प्रोफ़ाइल" data-en="Profile">प्रोफाइल</span></button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 7: EMPLOYER OTP ===== -->
+<div class="screen" id="screen-employer-otp">
+  <div class="screen-header">
+    <button class="back-btn" onclick="showScreen('screen-landing')">←</button>
+    <h2 data-mr="📱 नियोक्ता लॉगिन" data-hi="📱 नियोक्ता लॉगिन" data-en="📱 Employer Login">📱 नियोक्ता लॉगिन</h2>
+    <p data-mr="तुमचा मोबाईल नंबर टाका" data-hi="अपना मोबाइल नंबर डालें" data-en="Enter your mobile number">तुमचा मोबाईल नंबर टाका</p>
+  </div>
+  <div class="form-body" id="emp-otp-step-1">
+    <div class="form-group">
+      <label data-mr="📞 मोबाईल नंबर" data-hi="📞 मोबाइल नंबर" data-en="📞 Mobile Number">📞 मोबाईल नंबर</label>
+      <input type="tel" id="empPhone" maxlength="10" placeholder="9876543210" inputmode="numeric">
+    </div>
+    <div class="form-group">
+      <label data-mr="🏢 व्यवसायाचा प्रकार" data-hi="🏢 व्यवसाय का प्रकार" data-en="🏢 Business Type">🏢 व्यवसायाचा प्रकार</label>
+      <select id="empType">
+        <option value="शेतकरी">🌾 शेतकरी</option>
+        <option value="कंत्राटदार">🏗️ कंत्राटदार</option>
+        <option value="दुकानदार">🏪 दुकानदार</option>
+        <option value="इव्हेंट">🎉 इव्हेंट ऑर्गनायझर</option>
+        <option value="इतर">📋 इतर</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label data-mr="👤 तुमचे नाव" data-hi="👤 आपका नाम" data-en="👤 Your Name">👤 तुमचे नाव</label>
+      <input type="text" id="empName" placeholder="सुरेश शर्मा">
+    </div>
+    <button class="btn-primary" onclick="sendOTP('employer')" data-mr="OTP पाठवा →" data-hi="OTP भेजें →" data-en="Send OTP →">OTP पाठवा →</button>
+  </div>
+  <div class="form-body" id="emp-otp-step-2" style="display:none;">
+    <div class="form-group">
+      <label data-mr="🔐 OTP टाका" data-hi="🔐 OTP डालें" data-en="🔐 Enter OTP">🔐 OTP टाका</label>
+      <div class="otp-inputs">
+        <input type="text" maxlength="1" inputmode="numeric" class="emp-otp-box" oninput="empOtpNext(this,0)">
+        <input type="text" maxlength="1" inputmode="numeric" class="emp-otp-box" oninput="empOtpNext(this,1)">
+        <input type="text" maxlength="1" inputmode="numeric" class="emp-otp-box" oninput="empOtpNext(this,2)">
+        <input type="text" maxlength="1" inputmode="numeric" class="emp-otp-box" oninput="empOtpNext(this,3)">
+        <input type="text" maxlength="1" inputmode="numeric" class="emp-otp-box" oninput="empOtpNext(this,4)">
+        <input type="text" maxlength="1" inputmode="numeric" class="emp-otp-box" oninput="empOtpNext(this,5)">
+      </div>
+      <div class="resend-otp mt-8"><span>Demo: 123456 टाका</span></div>
+    </div>
+    <button class="btn-primary" onclick="verifyOTP('employer')" data-mr="✅ लॉगिन करा" data-hi="✅ लॉगिन करें" data-en="✅ Login">✅ लॉगिन करा</button>
+  </div>
+</div>
+
+<!-- ===== SCREEN 8: EMPLOYER DASHBOARD ===== -->
+<div class="screen" id="screen-employer-dashboard">
+  <div class="emp-header">
+    <h2 id="empDashName">सुरेश शर्मा 🏗️</h2>
+    <p data-mr="📍 लोणार, बुलढाणा" data-hi="📍 लोणार, बुलढाणा" data-en="📍 Lonar, Buldhana">📍 लोणार, बुलढाणा</p>
+  </div>
+  <div class="emp-tabs">
+    <button class="emp-tab active" onclick="switchEmpTab('workers',this)" data-mr="👷 कामगार शोधा" data-hi="👷 मजदूर खोजें" data-en="👷 Find Workers">👷 कामगार शोधा</button>
+    <button class="emp-tab" onclick="switchEmpTab('postjob',this)" data-mr="➕ काम पोस्ट करा" data-hi="➕ काम पोस्ट करें" data-en="➕ Post a Job">➕ काम पोस्ट करा</button>
+    <button class="emp-tab" onclick="switchEmpTab('myjobs',this)" data-mr="📋 माझी कामे" data-hi="📋 मेरे काम" data-en="📋 My Jobs">📋 माझी कामे</button>
+  </div>
+
+  <!-- Workers Tab -->
+  <div id="emp-tab-workers" class="emp-content">
+    <div class="filter-bar" style="padding: 0 0 12px; background: transparent; border: none;">
+      <button class="filter-chip active" onclick="filterWorkers(this,'all')" data-mr="सर्व" data-hi="सभी" data-en="All">सर्व</button>
+      <button class="filter-chip" onclick="filterWorkers(this,'शेती')">🌾 शेती</button>
+      <button class="filter-chip" onclick="filterWorkers(this,'बांधकाम')">🧱 बांधकाम</button>
+      <button class="filter-chip" onclick="filterWorkers(this,'घरकाम')">🏠 घरकाम</button>
+      <button class="filter-chip" onclick="filterWorkers(this,'लोडिंग')">📦 लोडिंग</button>
+    </div>
+    <div id="workersList"></div>
+  </div>
+
+  <!-- Post Job Tab -->
+  <div id="emp-tab-postjob" class="emp-content" style="display:none;">
+    <div class="post-job-form">
+      <h3 data-mr="नवीन काम पोस्ट करा" data-hi="नई नौकरी पोस्ट करें" data-en="Post a New Job">नवीन काम पोस्ट करा</h3>
+      <div class="form-group">
+        <label data-mr="🔨 कामाचा प्रकार" data-hi="🔨 काम का प्रकार" data-en="🔨 Job Type">🔨 कामाचा प्रकार</label>
+        <select id="newJobType">
+          <option>🌾 शेती</option>
+          <option>🧱 बांधकाम</option>
+          <option>🏠 घरकाम</option>
+          <option>📦 लोडिंग</option>
+          <option>🚗 ड्रायव्हिंग</option>
+          <option>⚡ इतर</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label data-mr="💰 दैनिक मजुरी (₹)" data-hi="💰 दैनिक मजदूरी (₹)" data-en="💰 Daily Wage (₹)">💰 दैनिक मजुरी (₹)</label>
+        <input type="number" id="newJobWage" placeholder="400" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label data-mr="👷 किती कामगार हवे?" data-hi="👷 कितने मजदूर चाहिए?" data-en="👷 Workers Needed">👷 किती कामगार हवे?</label>
+        <input type="number" id="newJobWorkers" placeholder="3" inputmode="numeric">
+      </div>
+      <div class="form-group">
+        <label data-mr="📅 कामाची तारीख" data-hi="📅 काम की तारीख" data-en="📅 Work Date">📅 कामाची तारीख</label>
+        <input type="date" id="newJobDate">
+      </div>
+      <div class="form-group">
+        <label data-mr="📍 ठिकाण" data-hi="📍 स्थान" data-en="📍 Location">📍 ठिकाण</label>
+        <input type="text" id="newJobLocation" placeholder="लोणार, बुलढाणा">
+      </div>
+      <button class="btn-accent" onclick="postJob()" data-mr="✅ काम पोस्ट करा" data-hi="✅ काम पोस्ट करें" data-en="✅ Post Job">✅ काम पोस्ट करा</button>
+    </div>
+  </div>
+
+  <!-- My Jobs Tab -->
+  <div id="emp-tab-myjobs" class="emp-content" style="display:none;">
+    <div id="myJobsList"></div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="nav-item" onclick="logout()"><span class="nav-icon">🚪</span><span data-mr="लॉगआउट" data-hi="लॉगआउट" data-en="Logout">लॉगआउट</span></button>
+    <button class="nav-item active"><span class="nav-icon">🏗️</span><span data-mr="डॅशबोर्ड" data-hi="डैशबोर्ड" data-en="Dashboard">डॅशबोर्ड</span></button>
+    <button class="nav-item" onclick="readPageAloud()"><span class="nav-icon">🔊</span><span data-mr="ऐका" data-hi="सुनें" data-en="Listen">ऐका</span></button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+let currentLang = 'mr';
+let currentUser = null;
+let userType = 'worker'; // 'worker' | 'employer'
+let selectedSkills = [];
+let appliedJobs = [];
+let postedJobs = [];
+let isSpeaking = false;
+let pendingJobId = null;
+
+const translations = {
+  mr: { home:'घर', myApps:'माझे अर्ज', profile:'प्रोफाइल', applied:'अर्ज केला ✓', apply:'अर्ज करा', listen:'ऐका', noApps:'अजून कोणत्याही कामासाठी अर्ज केला नाही.', jobPosted:'काम यशस्वीरित्या पोस्ट केले!', otpSent:'OTP पाठवला!', otpWrong:'चुकीचा OTP. 123456 टाका', fillAll:'सर्व माहिती भरा', appSubmitted:'अर्ज यशस्वीरित्या केला!', callText:'कॉल करत आहे...', msgText:'WhatsApp उघडत आहे...' },
+  hi: { home:'घर', myApps:'मेरे आवेदन', profile:'प्रोफ़ाइल', applied:'आवेदन किया ✓', apply:'आवेदन करें', listen:'सुनें', noApps:'अभी तक किसी काम के लिए आवेदन नहीं किया।', jobPosted:'काम सफलतापूर्वक पोस्ट किया!', otpSent:'OTP भेजा गया!', otpWrong:'गलत OTP। 123456 डालें', fillAll:'सभी जानकारी भरें', appSubmitted:'आवेदन सफलतापूर्वक किया!', callText:'कॉल हो रहा है...', msgText:'WhatsApp खुल रहा है...' },
+  en: { home:'Home', myApps:'My Apps', profile:'Profile', applied:'Applied ✓', apply:'Apply', listen:'Listen', noApps:'No applications yet.', jobPosted:'Job posted successfully!', otpSent:'OTP Sent!', otpWrong:'Wrong OTP. Enter 123456', fillAll:'Please fill all fields', appSubmitted:'Application submitted!', callText:'Calling...', msgText:'Opening WhatsApp...' }
+};
+
+const jobsData = [
+  { id:1, type:'शेती', icon:'🌾', location:'लोणार', distance:'3 km', wage:450, date:'उद्या', employer:'सुरेश पाटील', workers:5, desc:'धान कापणीसाठी कामगार हवे' },
+  { id:2, type:'बांधकाम', icon:'🧱', location:'मेहकर', distance:'8 km', wage:550, date:'आजच', employer:'राजेश बिल्डर्स', workers:3, desc:'घर बांधण्यासाठी मदत हवी' },
+  { id:3, type:'घरकाम', icon:'🏠', location:'लोणार', distance:'1 km', wage:300, date:'आजच', employer:'सुनीता ताई', workers:1, desc:'घर स्वच्छतेसाठी मदत हवी' },
+  { id:4, type:'लोडिंग', icon:'📦', location:'खामगाव', distance:'12 km', wage:600, date:'परवा', employer:'श्री ट्रेडर्स', workers:8, desc:'गोदाम लोडिंग अनलोडिंग काम' },
+  { id:5, type:'शेती', icon:'🌾', location:'नांदुरा', distance:'6 km', wage:400, date:'उद्या', employer:'गणेश शेतकरी', workers:10, desc:'सोयाबीन काढणीसाठी कामगार' },
+  { id:6, type:'बांधकाम', icon:'🧱', location:'मलकापूर', distance:'15 km', wage:500, date:'परवा', employer:'अहमद कंत्राटदार', workers:4, desc:'रंगकाम व प्लास्टर' },
+];
+
+const workersData = [
+  { id:1, name:'रामराव पाटील', skills:['शेती','लोडिंग'], age:32, phone:'9876501234', location:'लोणार', distance:'2 km', rating:4.8, jobs:47 },
+  { id:2, name:'संजय मोरे', skills:['बांधकाम','इतर'], age:28, phone:'9812345670', location:'लोणार', distance:'4 km', rating:4.5, jobs:31 },
+  { id:3, name:'लता बाई', skills:['घरकाम'], age:40, phone:'9823456701', location:'मेहकर', distance:'7 km', rating:5.0, jobs:62 },
+  { id:4, name:'विजय कांबळे', skills:['लोडिंग','ड्रायव्हिंग'], age:35, phone:'9834567012', location:'खामगाव', distance:'11 km', rating:4.7, jobs:28 },
+  { id:5, name:'प्रकाश जाधव', skills:['शेती','बांधकाम'], age:26, phone:'9845678123', location:'नांदुरा', distance:'5 km', rating:4.3, jobs:19 },
+];
+
+// ============================================================
+//  LANG
+// ============================================================
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('[data-'+lang+']').forEach(el => {
+    const val = el.getAttribute('data-'+lang);
+    if (val) el.textContent = val;
+  });
+  document.documentElement.lang = lang === 'mr' ? 'mr' : lang === 'hi' ? 'hi' : 'en';
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function goToWorkerOTP() { userType='worker'; showScreen('screen-otp'); }
+function goToEmployerOTP() { userType='employer'; showScreen('screen-employer-otp'); }
+
+// ============================================================
+//  OTP
+// ============================================================
+function otpNext(input, idx) {
+  if (input.value.length === 1) {
+    const boxes = document.querySelectorAll('.otp-box');
+    if (idx < 5) boxes[idx+1].focus();
+    else checkAutoOTP();
+  }
+}
+function empOtpNext(input, idx) {
+  if (input.value.length === 1) {
+    const boxes = document.querySelectorAll('.emp-otp-box');
+    if (idx < 5) boxes[idx+1].focus();
+    else checkAutoEmpOTP();
+  }
+}
+function checkAutoOTP() {
+  const otp = [...document.querySelectorAll('.otp-box')].map(b=>b.value).join('');
+  if (otp.length === 6) verifyOTP('worker');
+}
+function checkAutoEmpOTP() {
+  const otp = [...document.querySelectorAll('.emp-otp-box')].map(b=>b.value).join('');
+  if (otp.length === 6) verifyOTP('employer');
+}
+
+function sendOTP(type) {
+  if (type === 'worker') {
+    const phone = document.getElementById('workerPhone').value;
+    if (!phone || phone.length < 10) { showToast('📞 वैध नंबर टाका'); return; }
+    document.getElementById('otp-step-1').style.display = 'none';
+    document.getElementById('otp-step-2').style.display = 'block';
+  } else {
+    const phone = document.getElementById('empPhone').value;
+    const name = document.getElementById('empName').value;
+    if (!phone || phone.length < 10 || !name) { showToast(translations[currentLang].fillAll); return; }
+    document.getElementById('emp-otp-step-1').style.display = 'none';
+    document.getElementById('emp-otp-step-2').style.display = 'block';
+  }
+  showToast('📱 ' + translations[currentLang].otpSent);
+}
+
+function verifyOTP(type) {
+  let otpVal;
+  if (type === 'worker') {
+    otpVal = [...document.querySelectorAll('.otp-box')].map(b=>b.value).join('');
+  } else {
+    otpVal = [...document.querySelectorAll('.emp-otp-box')].map(b=>b.value).join('');
+  }
+  if (otpVal !== '123456') { showToast('❌ ' + translations[currentLang].otpWrong); return; }
+
+  if (type === 'worker') {
+    const saved = localStorage.getItem('gramrozgar_worker');
+    if (saved) {
+      currentUser = JSON.parse(saved);
+      loadWorkerDashboard();
+    } else {
+      showScreen('screen-register');
+    }
+  } else {
+    currentUser = {
+      name: document.getElementById('empName').value,
+      phone: document.getElementById('empPhone').value,
+      type: document.getElementById('empType').value
+    };
+    localStorage.setItem('gramrozgar_employer', JSON.stringify(currentUser));
+    loadEmployerDashboard();
+  }
+}
+
+// ============================================================
+//  SKILLS
+// ============================================================
+function toggleSkill(el, skill) {
+  el.classList.toggle('selected');
+  if (el.classList.contains('selected')) {
+    selectedSkills.push(skill);
+  } else {
+    selectedSkills = selectedSkills.filter(s => s !== skill);
+  }
+}
+
+// ============================================================
+//  REGISTER
+// ============================================================
+function registerWorker() {
+  const name = document.getElementById('workerName').value;
+  const age = document.getElementById('workerAge').value;
+  const aadhaar = document.getElementById('workerAadhaar').value;
+  if (!name || !age) { showToast(translations[currentLang].fillAll); return; }
+  currentUser = {
+    name, age, aadhaar: aadhaar || 'XXXX',
+    phone: document.getElementById('workerPhone').value,
+    skills: selectedSkills.length ? selectedSkills : ['इतर']
+  };
+  localStorage.setItem('gramrozgar_worker', JSON.stringify(currentUser));
+  loadWorkerDashboard();
+}
+
+// ============================================================
+//  WORKER DASHBOARD
+// ============================================================
+function loadWorkerDashboard() {
+  document.getElementById('dashWorkerName').textContent = currentUser.name;
+  renderJobFeed(jobsData);
+  showScreen('screen-worker-dashboard');
+  speak('नमस्कार ' + currentUser.name + ', आज तुमच्या जवळ ६ कामे उपलब्ध आहेत. खाली पाहा.');
+}
+
+function renderJobFeed(jobs) {
+  const feed = document.getElementById('jobFeed');
+  feed.innerHTML = `<div class="section-title">${currentLang==='mr'?'जवळची कामे':currentLang==='hi'?'पास के काम':'Nearby Jobs'} (${jobs.length})</div>`;
+  jobs.forEach(job => {
+    const isApplied = appliedJobs.includes(job.id);
+    feed.innerHTML += `
+    <div class="job-card" id="job-card-${job.id}">
+      <div class="job-card-header">
+        <span class="job-type-icon">${job.icon}</span>
+        <span class="job-type-name">${job.type}</span>
+        <span class="job-distance">📍 ${job.distance}</span>
+      </div>
+      <div class="job-card-body">
+        <div class="job-wage">₹${job.wage} <span>/ दिवस</span></div>
+        <div class="job-details">
+          <div class="job-detail-row">📍 ${job.location}</div>
+          <div class="job-detail-row">📅 ${job.date}</div>
+          <div class="job-detail-row">👷 ${job.workers} कामगार हवे</div>
+          <div class="job-detail-row">🏢 ${job.employer}</div>
+        </div>
+      </div>
+      <div class="job-card-actions">
+        <button class="btn-apply ${isApplied?'applied':''}" id="apply-btn-${job.id}" onclick="openApplyModal(${job.id})">${isApplied? translations[currentLang].applied : translations[currentLang].apply}</button>
+        <button class="btn-listen" onclick="listenJob(${job.id})">🔊 ${translations[currentLang].listen}</button>
+      </div>
+    </div>`;
+  });
+}
+
+function filterJobs(el, type) {
+  document.querySelectorAll('#workerFilterBar .filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const filtered = type === 'all' ? jobsData : jobsData.filter(j=>j.type===type);
+  renderJobFeed(filtered);
+}
+
+function openApplyModal(jobId) {
+  if (appliedJobs.includes(jobId)) return;
+  pendingJobId = jobId;
+  const job = jobsData.find(j=>j.id===jobId);
+  document.getElementById('modalJobTitle').textContent = job.icon + ' ' + job.type;
+  document.getElementById('modalLocation').textContent = job.location;
+  document.getElementById('modalWage').textContent = '₹' + job.wage + ' / दिवस';
+  document.getElementById('modalDate').textContent = job.date;
+  document.getElementById('modalEmployer').textContent = job.employer;
+  document.getElementById('applyModal').classList.add('open');
+}
+function closeApplyModal() { document.getElementById('applyModal').classList.remove('open'); }
+function confirmApply() {
+  appliedJobs.push(pendingJobId);
+  const btn = document.getElementById('apply-btn-'+pendingJobId);
+  if (btn) { btn.textContent = translations[currentLang].applied; btn.classList.add('applied'); }
+  closeApplyModal();
+  showToast('✅ ' + translations[currentLang].appSubmitted);
+  speak(translations[currentLang].appSubmitted);
+}
+
+function listenJob(jobId) {
+  const job = jobsData.find(j=>j.id===jobId);
+  const text = `${job.type} काम, ${job.location} मध्ये, ${job.wage} रुपये प्रतिदिन, ${job.date}, ${job.workers} कामगार हवे.`;
+  speak(text);
+}
+
+function switchWorkerTab(tab, el) {
+  if (tab === 'home') { showScreen('screen-worker-dashboard'); }
+  else if (tab === 'apps') { renderMyApps(); showScreen('screen-my-apps'); }
+  else if (tab === 'profile') { renderProfile(); showScreen('screen-worker-profile'); }
+}
+
+function renderMyApps() {
+  const list = document.getElementById('myAppsList');
+  if (!appliedJobs.length) { list.innerHTML = `<div style="text-align:center;color:var(--text-muted);margin-top:48px;font-size:18px;">📭 ${translations[currentLang].noApps}</div>`; return; }
+  list.innerHTML = '';
+  appliedJobs.forEach(id => {
+    const job = jobsData.find(j=>j.id===id);
+    if (!job) return;
+    list.innerHTML += `<div class="app-card"><div style="font-size:22px;font-weight:700;">${job.icon} ${job.type}</div><div style="color:var(--text-muted);margin-top:4px;">📍 ${job.location} &nbsp;·&nbsp; ₹${job.wage}/दिवस</div><div style="color:var(--text-muted);font-size:14px;margin-top:4px;">🏢 ${job.employer}</div><span class="app-status status-pending">⏳ पेंडिंग</span></div>`;
+  });
+}
+
+function renderProfile() {
+  if (!currentUser) return;
+  document.getElementById('profileAvatar').textContent = currentUser.name[0];
+  document.getElementById('profileName').textContent = currentUser.name;
+  document.getElementById('profilePhone').textContent = '📞 ' + currentUser.phone;
+  document.getElementById('profileAge').textContent = currentUser.age + ' वर्षे';
+  document.getElementById('profileAadhaar').textContent = 'XXXX XXXX ' + currentUser.aadhaar;
+  const skillsEl = document.getElementById('profileSkills');
+  skillsEl.innerHTML = (currentUser.skills||[]).map(s=>`<span class="skill-tag">${s}</span>`).join('');
+}
+
+// ============================================================
+//  EMPLOYER DASHBOARD
+// ============================================================
+function loadEmployerDashboard() {
+  document.getElementById('empDashName').textContent = currentUser.name + ' ' + (currentUser.type==='शेतकरी'?'🌾':currentUser.type==='कंत्राटदार'?'🏗️':'🏪');
+  renderWorkersList(workersData);
+  renderMyJobs();
+  showScreen('screen-employer-dashboard');
+}
+
+function renderWorkersList(workers) {
+  const list = document.getElementById('workersList');
+  list.innerHTML = '';
+  workers.forEach(w => {
+    list.innerHTML += `
+    <div class="worker-card">
+      <div class="worker-avatar">${w.name[0]}</div>
+      <div class="worker-info">
+        <div class="worker-card-name">${w.name}</div>
+        <div class="worker-skills-tags">${w.skills.map(s=>`<span class="skill-tag">${s}</span>`).join('')}</div>
+        <div class="worker-card-meta">⭐ ${w.rating} &nbsp;·&nbsp; ${w.jobs} कामे &nbsp;·&nbsp; 📍 ${w.distance}</div>
+        <div class="worker-card-actions">
+          <button class="btn-call" onclick="callWorker('${w.phone}','${w.name}')">📞 कॉल करा</button>
+          <button class="btn-msg" onclick="msgWorker('${w.phone}','${w.name}')">💬 WhatsApp</button>
+        </div>
+      </div>
+    </div>`;
+  });
+}
+
+function filterWorkers(el, type) {
+  document.querySelectorAll('#emp-tab-workers .filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  const filtered = type==='all' ? workersData : workersData.filter(w=>w.skills.includes(type));
+  renderWorkersList(filtered);
+}
+
+function callWorker(phone, name) {
+  showToast(translations[currentLang].callText + ' ' + name);
+  setTimeout(() => { window.location.href = 'tel:+91'+phone; }, 800);
+}
+function msgWorker(phone, name) {
+  showToast(translations[currentLang].msgText);
+  const msg = encodeURIComponent('नमस्कार ' + name + ', GramRozgar वरून तुमच्याशी संपर्क करत आहे. तुम्हाला काम उपलब्ध आहे.');
+  setTimeout(() => { window.open('https://wa.me/91'+phone+'?text='+msg, '_blank'); }, 400);
+}
+
+function postJob() {
+  const type = document.getElementById('newJobType').value;
+  const wage = document.getElementById('newJobWage').value;
+  const workers = document.getElementById('newJobWorkers').value;
+  const date = document.getElementById('newJobDate').value;
+  const location = document.getElementById('newJobLocation').value;
+  if (!wage || !workers || !date || !location) { showToast(translations[currentLang].fillAll); return; }
+  const newJob = { id: Date.now(), type: type.replace(/[^a-zA-Zऀ-ॿ\s]/g,'').trim(), icon: type[0]+type[1], wage, workers, date, location, employer: currentUser.name };
+  postedJobs.push(newJob);
+  showToast('✅ ' + translations[currentLang].jobPosted);
+  speak(translations[currentLang].jobPosted);
+  document.getElementById('newJobWage').value='';
+  document.getElementById('newJobWorkers').value='';
+  document.getElementById('newJobDate').value='';
+  document.getElementById('newJobLocation').value='';
+  switchEmpTab('myjobs', document.querySelectorAll('.emp-tab')[2]);
+}
+
+function renderMyJobs() {
+  const list = document.getElementById('myJobsList');
+  if (!postedJobs.length) {
+    list.innerHTML = `<div style="text-align:center;color:var(--text-muted);margin-top:48px;font-size:17px;">📭 अजून कोणतेही काम पोस्ट केले नाही.</div><button class="btn-primary mt-16" onclick="switchEmpTab('postjob',document.querySelectorAll('.emp-tab')[1])" data-mr="+ नवीन काम पोस्ट करा">+ नवीन काम पोस्ट करा</button>`;
+    return;
+  }
+  list.innerHTML = '';
+  postedJobs.forEach(j => {
+    list.innerHTML += `<div class="app-card"><div style="font-size:20px;font-weight:700;">${j.icon} ${j.type}</div><div style="color:var(--text-muted);margin-top:6px;">📍 ${j.location} &nbsp;·&nbsp; ₹${j.wage}/दिवस</div><div style="color:var(--text-muted);font-size:14px;margin-top:4px;">📅 ${j.date} &nbsp;·&nbsp; 👷 ${j.workers} हवे</div><span class="app-status status-accepted">✅ सक्रिय</span></div>`;
+  });
+}
+
+function switchEmpTab(tab, el) {
+  document.querySelectorAll('.emp-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('emp-tab-workers').style.display = tab==='workers'?'block':'none';
+  document.getElementById('emp-tab-postjob').style.display = tab==='postjob'?'block':'none';
+  document.getElementById('emp-tab-myjobs').style.display = tab==='myjobs'?'block':'none';
+  if (tab==='myjobs') renderMyJobs();
+}
+
+// ============================================================
+//  VOICE
+// ============================================================
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = currentLang === 'en' ? 'en-IN' : currentLang === 'hi' ? 'hi-IN' : 'mr-IN';
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+function toggleVoice() {
+  const fab = document.getElementById('voiceFab');
+  if (isSpeaking) { speechSynthesis.cancel(); isSpeaking=false; fab.classList.remove('speaking'); fab.textContent='🔊'; return; }
+  isSpeaking = true; fab.classList.add('speaking'); fab.textContent='⏹️';
+  const jobCards = document.querySelectorAll('.job-card');
+  let text = `आज ${jobsData.length} कामे उपलब्ध आहेत. `;
+  jobsData.slice(0,3).forEach((j,i) => { text += `${i+1}. ${j.type} काम, ${j.location} मध्ये, ${j.wage} रुपये प्रतिदिन. `; });
+  speak(text);
+  setTimeout(()=>{ isSpeaking=false; fab.classList.remove('speaking'); fab.textContent='🔊'; }, 12000);
+}
+
+function readPageAloud() {
+  speak('नमस्कार ' + (currentUser?.name||'') + ', तुम्ही नियोक्ता डॅशबोर्ड वर आहात. कामगार शोधा, नवीन काम पोस्ट करा, किंवा माझी कामे पाहा.');
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ============================================================
+//  LOGOUT
+// ============================================================
+function logout() {
+  currentUser = null;
+  selectedSkills = [];
+  appliedJobs = [];
+  localStorage.removeItem('gramrozgar_worker');
+  localStorage.removeItem('gramrozgar_employer');
+  showScreen('screen-landing');
+  showToast('👋 लॉगआउट झाले');
+}
+
+// ============================================================
+//  AUTO LOGIN
+// ============================================================
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('gramrozgar_worker');
+  if (saved) { currentUser = JSON.parse(saved); loadWorkerDashboard(); }
+});
+</script>
+</body>
+</html>
