@@ -536,10 +536,11 @@ const workersData = [
 // ============================================================
 //  LANG
 // ============================================================
-function setLang(lang) {
+function setLang(lang, triggerEl) {
   currentLang = lang;
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  const activeBtn = triggerEl || (typeof event !== 'undefined' && event && event.target) || null;
+  if (activeBtn) activeBtn.classList.add('active');
   document.querySelectorAll('[data-'+lang+']').forEach(el => {
     const val = el.getAttribute('data-'+lang);
     if (val) el.textContent = val;
@@ -846,31 +847,245 @@ function switchEmpTab(tab, el) {
 }
 
 // ============================================================
-//  VOICE
+//  VOICE — Smart Text-to-Speech with auto language/voice fallback
 // ============================================================
-function speak(text) {
-  if (!window.speechSynthesis) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = currentLang === 'en' ? 'en-IN' : currentLang === 'hi' ? 'hi-IN' : 'mr-IN';
-  u.rate = 0.9;
-  speechSynthesis.speak(u);
+
+// Cache of available voices (populated after voiceschanged event)
+let _cachedVoices = [];
+let _voiceReady = false;
+
+function _initVoices() {
+  _cachedVoices = window.speechSynthesis.getVoices();
+  _voiceReady = _cachedVoices.length > 0;
 }
 
+if (window.speechSynthesis) {
+  window.speechSynthesis.addEventListener('voiceschanged', _initVoices);
+  // Also try immediately (Chrome loads voices synchronously sometimes)
+  setTimeout(_initVoices, 300);
+}
+
+/**
+ * Pick the best available voice for the given BCP-47 lang tag.
+ * Falls back through: exact lang → language family → any Indian English → null (browser default).
+ */
+function _pickVoice(langTag) {
+  if (!_cachedVoices.length) _cachedVoices = window.speechSynthesis.getVoices();
+  const voices = _cachedVoices;
+  if (!voices.length) return null;
+
+  // 1. Exact match (e.g. "mr-IN", "hi-IN")
+  let v = voices.find(v => v.lang === langTag);
+  if (v) return v;
+
+  // 2. Language family match (first 2 chars: "mr", "hi", "en")
+  const prefix = langTag.slice(0, 2);
+  v = voices.find(v => v.lang.startsWith(prefix));
+  if (v) return v;
+
+  // 3. For Marathi / Hindi that have no native voice: fall back to Hindi then en-IN then any en
+  if (prefix === 'mr' || prefix === 'hi') {
+    v = voices.find(v => v.lang.startsWith('hi'));
+    if (v) return v;
+    v = voices.find(v => v.lang === 'en-IN');
+    if (v) return v;
+  }
+
+  // 4. Any Indian English
+  v = voices.find(v => v.lang === 'en-IN');
+  if (v) return v;
+
+  // 5. Any English
+  v = voices.find(v => v.lang.startsWith('en'));
+  if (v) return v;
+
+  return null;
+}
+
+/**
+ * Core speak function — cancels any ongoing speech, waits for voices if needed, then speaks.
+ * @param {string} text  Text to speak
+ * @param {Function} [onEnd]  Optional callback when utterance finishes
+ */
+function speak(text, onEnd) {
+  if (!window.speechSynthesis || !text) return;
+  speechSynthesis.cancel();
+
+  const langTag = currentLang === 'en' ? 'en-IN' : currentLang === 'hi' ? 'hi-IN' : 'mr-IN';
+
+  function _doSpeak() {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = langTag;
+    u.rate = 0.88;
+    u.pitch = 1.0;
+    const voice = _pickVoice(langTag);
+    if (voice) u.voice = voice;
+    if (onEnd) u.onend = onEnd;
+    u.onerror = () => {}; // Suppress console errors silently
+    speechSynthesis.speak(u);
+  }
+
+  // If voices not yet loaded, wait briefly then speak
+  if (!_voiceReady && window.speechSynthesis.getVoices().length === 0) {
+    setTimeout(_doSpeak, 350);
+  } else {
+    _doSpeak();
+  }
+}
+
+/**
+ * Stop all speech immediately.
+ */
+function stopSpeaking() {
+  if (window.speechSynthesis) speechSynthesis.cancel();
+  isSpeaking = false;
+  const fab = document.getElementById('voiceFab');
+  if (fab) { fab.classList.remove('speaking'); fab.textContent = '🔊'; }
+}
+
+/**
+ * 🔊 FAB button on Worker Dashboard — reads ALL currently visible job cards aloud.
+ * Respects the active filter (reads only what the user sees).
+ */
 function toggleVoice() {
   const fab = document.getElementById('voiceFab');
-  if (isSpeaking) { speechSynthesis.cancel(); isSpeaking=false; fab.classList.remove('speaking'); fab.textContent='🔊'; return; }
-  isSpeaking = true; fab.classList.add('speaking'); fab.textContent='⏹️';
-  const jobCards = document.querySelectorAll('.job-card');
-  let text = `आज ${jobsData.length} कामे उपलब्ध आहेत. `;
-  jobsData.slice(0,3).forEach((j,i) => { text += `${i+1}. ${j.type} काम, ${j.location} मध्ये, ${j.wage} रुपये प्रतिदिन. `; });
-  speak(text);
-  setTimeout(()=>{ isSpeaking=false; fab.classList.remove('speaking'); fab.textContent='🔊'; }, 12000);
+
+  if (isSpeaking) {
+    stopSpeaking();
+    return;
+  }
+
+  // Collect text from ALL currently rendered job cards (visible on screen)
+  const jobCards = document.querySelectorAll('#jobFeed .job-card');
+  if (!jobCards.length) {
+    speak(currentLang === 'mr' ? 'कोणतेही काम उपलब्ध नाही.' :
+          currentLang === 'hi' ? 'कोई काम उपलब्ध नहीं है।' :
+          'No jobs available.');
+    return;
+  }
+
+  // Build a reading script from visible job data
+  const count = jobCards.length;
+  let intro = '';
+  if (currentLang === 'mr') intro = `आज ${count} कामे उपलब्ध आहेत. `;
+  else if (currentLang === 'hi') intro = `आज ${count} काम उपलब्ध हैं। `;
+  else intro = `${count} jobs available today. `;
+
+  // Gather job info by matching card IDs back to jobsData (works with filtered views too)
+  let jobTexts = [];
+  jobCards.forEach((card, i) => {
+    const idMatch = card.id && card.id.replace('job-card-', '');
+    const job = idMatch ? jobsData.find(j => String(j.id) === idMatch) : null;
+    if (!job) return;
+
+    if (currentLang === 'mr') {
+      jobTexts.push(`${i+1}. ${job.type} काम, ${job.location} मध्ये, ${job.wage} रुपये प्रतिदिन, ${job.date}, ${job.employer}.`);
+    } else if (currentLang === 'hi') {
+      jobTexts.push(`${i+1}. ${job.type} काम, ${job.location} में, ${job.wage} रुपये प्रतिदिन, ${job.date}, ${job.employer}.`);
+    } else {
+      jobTexts.push(`${i+1}. ${job.type} job, at ${job.location}, rupees ${job.wage} per day, on ${job.date}, by ${job.employer}.`);
+    }
+  });
+
+  const fullText = intro + jobTexts.join(' ');
+
+  isSpeaking = true;
+  fab.classList.add('speaking');
+  fab.textContent = '⏹️';
+
+  speak(fullText, () => {
+    isSpeaking = false;
+    fab.classList.remove('speaking');
+    fab.textContent = '🔊';
+  });
+
+  // Safety timeout fallback (stop UI state even if onend doesn't fire)
+  const approxDuration = Math.max(6000, fullText.length * 70);
+  setTimeout(() => {
+    if (isSpeaking) stopSpeaking();
+  }, approxDuration);
 }
 
-function readPageAloud() {
-  speak('नमस्कार ' + (currentUser?.name||'') + ', तुम्ही नियोक्ता डॅशबोर्ड वर आहात. कामगार शोधा, नवीन काम पोस्ट करा, किंवा माझी कामे पाहा.');
+/**
+ * 🔊 Listen button on individual job cards — reads that specific job's full details.
+ */
+function listenJob(jobId) {
+  const job = jobsData.find(j => j.id === jobId);
+  if (!job) return;
+
+  let text = '';
+  if (currentLang === 'mr') {
+    text = `${job.type} काम. ठिकाण: ${job.location}, ${job.distance} दूर. ` +
+           `मजुरी: ${job.wage} रुपये प्रतिदिन. तारीख: ${job.date}. ` +
+           `नियोक्ता: ${job.employer}. ${job.workers} कामगार हवे. ${job.desc || ''}`;
+  } else if (currentLang === 'hi') {
+    text = `${job.type} काम। स्थान: ${job.location}, ${job.distance} दूर। ` +
+           `मजदूरी: ${job.wage} रुपये प्रतिदिन। तारीख: ${job.date}। ` +
+           `नियोक्ता: ${job.employer}। ${job.workers} मजदूर चाहिए। ${job.desc || ''}`;
+  } else {
+    text = `${job.type} job. Location: ${job.location}, ${job.distance} away. ` +
+           `Wage: ${job.wage} rupees per day. Date: ${job.date}. ` +
+           `Employer: ${job.employer}. ${job.workers} workers needed. ${job.desc || ''}`;
+  }
+
+  speak(text);
 }
+
+/**
+ * 🔊 Employer dashboard "Listen / ऐका" button — reads visible content of the active tab.
+ */
+function readPageAloud() {
+  // Find which employer tab is active
+  const isWorkers = document.getElementById('emp-tab-workers').style.display !== 'none';
+  const isPostJob = document.getElementById('emp-tab-postjob').style.display !== 'none';
+  const isMyjobs  = document.getElementById('emp-tab-myjobs').style.display !== 'none';
+
+  let text = '';
+  const name = currentUser ? currentUser.name : '';
+
+  if (isWorkers) {
+    // Read all visible worker cards
+    const wCards = document.querySelectorAll('#workersList .worker-card');
+    const wCount = wCards.length;
+
+    if (currentLang === 'mr') {
+      text = `${name ? name + ', ' : ''}${wCount} कामगार उपलब्ध आहेत. `;
+    } else if (currentLang === 'hi') {
+      text = `${name ? name + ', ' : ''}${wCount} मजदूर उपलब्ध हैं। `;
+    } else {
+      text = `${name ? name + ', ' : ''}${wCount} workers available. `;
+    }
+
+    // Read each worker card
+    wCards.forEach((card, i) => {
+      const workerName = card.querySelector('.worker-card-name')?.textContent || '';
+      const meta = card.querySelector('.worker-card-meta')?.textContent || '';
+      const skills = [...card.querySelectorAll('.skill-tag')].map(t => t.textContent).join(', ');
+
+      if (currentLang === 'mr') {
+        text += `${i+1}. ${workerName}, कौशल्य: ${skills}. ${meta}. `;
+      } else if (currentLang === 'hi') {
+        text += `${i+1}. ${workerName}, कौशल्य: ${skills}। ${meta}। `;
+      } else {
+        text += `${i+1}. ${workerName}, skills: ${skills}. ${meta}. `;
+      }
+    });
+
+  } else if (isPostJob) {
+    if (currentLang === 'mr') text = `नवीन काम पोस्ट करण्यासाठी फॉर्म भरा. कामाचा प्रकार, मजुरी, कामगार संख्या, तारीख आणि ठिकाण टाका.`;
+    else if (currentLang === 'hi') text = `नई नौकरी पोस्ट करने के लिए फॉर्म भरें। काम का प्रकार, मजदूरी, मजदूर संख्या, तारीख और स्थान भरें।`;
+    else text = `Fill the form to post a new job. Enter job type, wage, number of workers, date, and location.`;
+
+  } else if (isMyjobs) {
+    const myCount = postedJobs.length;
+    if (currentLang === 'mr') text = myCount ? `तुम्ही ${myCount} कामे पोस्ट केली आहेत.` : `तुम्ही अजून कोणतेही काम पोस्ट केले नाही.`;
+    else if (currentLang === 'hi') text = myCount ? `आपने ${myCount} काम पोस्ट किए हैं।` : `आपने अभी तक कोई काम पोस्ट नहीं किया।`;
+    else text = myCount ? `You have posted ${myCount} jobs.` : `You have not posted any jobs yet.`;
+  }
+
+  if (text) speak(text);
+}
+
 
 // ============================================================
 //  TOAST
